@@ -33,5 +33,8 @@ casex({reset, opcode,op,cond,state})
 {9'b000100000,`S2}: {nsel, next_state,loada,loadb,muxccontrol,loadc,vsel,write,loads,asel,bsel,reset_pc,load_pc,addr_sel,load_ir,mem_cmd,load_addr}
                    ={3'b0,     `S3   ,1'b0 ,1'b0 ,1'b0       ,1'b1 ,2'b00,1'b0,1'b0 ,1'b0,1'b0,1'b0    ,1'b0   ,1'b0    ,1'b0   ,`M_NONE,1'b0};
 //add the two and send to datapath_out
+{9'b000100000,`S3}: {nsel, next_state,loada,loadb,muxccontrol,loadc,vsel,write,loads,asel,bsel,reset_pc,load_pc,addr_sel,load_ir,mem_cmd,load_addr}
+                   ={3'b0,     `S4   ,1'b0 ,1'b0 ,1'b0       ,1'b1 ,2'b00,1'b0,1'b0 ,1'b0,1'b0,1'b0    ,1'b0   ,1'b0    ,1'b0   ,`M_NONE,1'b1};
+//load address to mem_addr
 endcase
 end
