@@ -11,12 +11,27 @@
   output reg load_pc,reset_pc,addr_sel,load_addr; //Lab7 addition going to program counter
   output reg [1:0] vsel;
   output reg [1:0] mem_cmd; //Lab 7 addition going into RAM 
+  output reg muxccontrol
+  
+  always @(*)
+    case(vsel)
+      2'b00: data_in = C; 
+      2'b01: data_in = {7'b0,PC};
+      2'b10: data_in = sximm8;
+      2'b11: data_in = mdata;
  */ //this is just for my reference
 
 always @(posedge clk) begin
 casex({reset, opcode,op,cond,state})
 //B -> PC = PC+1+sx(im8)
-{9'b000100000,`S0}: {nsel, next_state,loada,loadb,loadc,vsel,write,loads,asel,bsel,reset_pc,load_pc,addr_sel,load_ir,mem_cmd,load_addr}
-={3'b0,`S1,}
+{9'b000100000,`S0}: {nsel, next_state,loada,loadb,muxccontrol,loadc,vsel,write,loads,asel,bsel,reset_pc,load_pc,addr_sel,load_ir,mem_cmd,load_addr}
+                   ={3'b0,     `S1   ,1'b1 ,1'b0 ,1'b1       ,1'b0 ,2'b10,1'b0,1'b0 ,1'b0,1'b0,1'b0    ,1'b0   ,1'b0    ,1'b0   ,`M_NONE,1'b0};
+//set muxccontrol to 1 to pick data_in, set vsel 2'b10 to choose sximm8, load in to a
+{9'b000100000,`S1}: {nsel, next_state,loada,loadb,muxccontrol,loadc,vsel,write,loads,asel,bsel,reset_pc,load_pc,addr_sel,load_ir,mem_cmd,load_addr}
+                   ={3'b0,     `S2   ,1'b0 ,1'b1 ,1'b1       ,1'b0 ,2'b01,1'b0,1'b0 ,1'b0,1'b0,1'b0    ,1'b0   ,1'b0    ,1'b0   ,`M_NONE,1'b0};
+//set muxccontrol to 1 to pick data_in, set vsel 2'b01 to choose PC, load in to b
+{9'b000100000,`S2}: {nsel, next_state,loada,loadb,muxccontrol,loadc,vsel,write,loads,asel,bsel,reset_pc,load_pc,addr_sel,load_ir,mem_cmd,load_addr}
+                   ={3'b0,     `S3   ,1'b0 ,1'b0 ,1'b0       ,1'b1 ,2'b00,1'b0,1'b0 ,1'b0,1'b0,1'b0    ,1'b0   ,1'b0    ,1'b0   ,`M_NONE,1'b0};
+//add the two and send to datapath_out
 endcase
 end
