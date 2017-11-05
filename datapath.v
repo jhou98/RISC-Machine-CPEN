@@ -1,8 +1,8 @@
 module datapath(clk, readnum, vsel, loada, loadb, shift, asel, bsel,
 		ALUop, loadc, loads, writenum, write, mdata, 
-		status, C, sximm8, PC, sximm5);
+		status, C, sximm8, PC, sximm5, muxccontrol);
 
-  input clk, loada, loadb, loadc, loads, asel, bsel, write;
+  input clk, loada, loadb, loadc, loads, asel, bsel, write, muxccontrol;
   input [1:0] vsel;
   input [1:0] shift, ALUop; 
   input [2:0] writenum, readnum;  
@@ -13,6 +13,7 @@ module datapath(clk, readnum, vsel, loada, loadb, shift, asel, bsel,
   reg [15:0] data_in;
   wire [15:0] muxa, muxb, aout, bout, bout_shift, data_out, ALUout;
   wire [2:0] status_out;
+	wire [15:0] muxc;
  
   always @(*)
     case(vsel)
@@ -34,10 +35,13 @@ module datapath(clk, readnum, vsel, loada, loadb, shift, asel, bsel,
   );
   
   //Pipeline Registers A, B, C and Status
-  vDFFE #(16) reg_a(clk, loada, data_out, aout);
-  vDFFE #(16) reg_b(clk, loadb, data_out, bout); 
+	vDFFE #(16) reg_a(clk, loada, muxc, aout);
+	vDFFE #(16) reg_b(clk, loadb, muxc, bout); 
   vDFFE #(16) reg_c(clk, loadc, ALUout, C);
   vDFFE #(3) status_block(.clk(clk), .en(loads), .in(status_out), .out(status));
+	
+	//MUX chooses between output of regfile and input of regfile (appears after regfile in diagram)
+	assign muxc = muxccontrol ? data_in : data_out
 
   //Shifter for Reg_B
   shifter shift_b(shift, bout, bout_shift);
