@@ -7,7 +7,7 @@ module cpu(clk,reset,in,out,N,V,Z,mem_cmd,mem_addr);
   output [15:0] out; //datapath_out
   output [1:0] mem_cmd;
   output [8:0] mem_addr;
-  wire N, V, Z; 
+  output N, V, Z; 
   wire load_ir; //load for instruction register 
 
 
@@ -29,7 +29,7 @@ module cpu(clk,reset,in,out,N,V,Z,mem_cmd,mem_addr);
 	
   //Lab8 wires
   wire [2:0] cond;
-  wire PC_out;		
+  wire [8:0] PC_out;		
   wire PC_sel;		
   wire muxccontrol;
   //top MUX output wire
@@ -73,7 +73,7 @@ module cpu(clk,reset,in,out,N,V,Z,mem_cmd,mem_addr);
 		        .mem_cmd(mem_cmd),
 		        .load_ir(load_ir),
 		        .load_addr(load_addr),
-			.cond(cond)
+			.cond(cond),
 			.N(N),
 			.V(V),
 			.Z(Z),
@@ -99,21 +99,22 @@ module cpu(clk,reset,in,out,N,V,Z,mem_cmd,mem_addr);
 			.C(out),
 			.sximm8(sximm8),
 			.sximm5(sximm5),
-			.PC(PC)
+			.PC(PC),
+			.muxccontrol(muxccontrol)
   );	
 
-  vDFFE #(9) Program_counter(clk,load_pc,next_pc,PC);
+  vDFFE #(9) Program_counter(clk,load_pc,next_pc,PC_out);
 
   // for MUX above program counter
-  assign next_pc = reset_pc ? 9'b0 : (PC+1'b1);
+  assign next_pc = reset_pc ? 9'b0:(PC+1'b1);
 	
   vDFFE #(9) Data_address(clk,load_addr,out[8:0], output_from_data_address);
  
   //Lower MUX
-  assign mem_addr = addr_sel ? PC : output_from_data_address;
+  assign mem_addr = addr_sel ? PC:output_from_data_address;
 
   //MUX for PC = PC +1+sx(imm8)		
-  assign PC = PC_sel ? out[8:0] : PC_out;
+  assign PC = PC_sel ? out[8:0]:PC_out;
 
   //Now assign N,V,Z the values from status we get from datapath 
   assign N = status[0];
@@ -169,7 +170,7 @@ module setval(instruction_out,opcode,op,cond,ALUop,imm5,imm8,shift,Rn,Rd,Rm);
 	//set all outputs that are not used to 0
 	{5'b11010,11'bx}: {opcode,op,ALUop,Rn,imm8,imm5,Rd,shift,Rm} = {instruction_out[15:13],2'b10,2'b0,instruction_out[10:8],instruction_out[7:0],
 						5'b0,3'b0,2'b0,3'b0};//Move value to register (MOV Rn, #<im8>)
-	{8'b11000000,8'bx}: {opcode,op,ALUop,Rn,imm8,imm5,Rd,shift,Rm} = {instruction_out[15:13],2'b0,2'b0,3'b0,8'b0,5'b0, instruction_out[7:5],
+	{8'b11000000,8'bx}: {opcode,op,ALUop,Rn,imm8,imm5,Rd,shift,Rm,cond} = {instruction_out[15:13],2'b0,2'b0,3'b0,8'b0,5'b0, instruction_out[7:5],
 						instruction_out[4:3],instruction_out[2:0]};//Shift a known value and store in a new register (Rn =sh_Rm)
 	{5'b10100,11'bx}: {opcode,op,ALUop,Rn,imm8,imm5,Rd,shift,Rm} = {instruction_out[15:13],2'b0,2'b0,instruction_out[10:8],
 						8'b0,5'b0,instruction_out[7:5],instruction_out[4:3],instruction_out[2:0]};//Add (ADD Rd = Rn + Rm)
@@ -187,7 +188,7 @@ module setval(instruction_out,opcode,op,cond,ALUop,imm5,imm8,shift,Rn,Rd,Rm);
 						8'b0,5'b0,3'b0,2'b0,3'b0}; //HALT (so everything is 0 other than opcode = 111
 	{5'b00100,11'bx}:{opcode,op,cond,ALUop,Rn,imm8,imm5,Rd,shift,Rm} = {instruction_out[15:13],instruction_out[12:11],instruction_out[10:8],
 						2'b0,3'b0,instruction_out[7:0],5'b0,3'b0,2'b0,3'b0}; //Branch instructions (B,BEQ,BNE,BLT,BLE)	
-	default: {opcode,op,ALUop,Rn,imm8,imm5,Rd,shift,Rm} = {3'bx,2'bx,2'bx,3'bx,8'bx,5'bx,3'bx,2'bx,3'bx}; //for now any other operation will set all vars to x 
+	default: {opcode,op,cond,ALUop,Rn,imm8,imm5,Rd,shift,Rm} = {3'bx,2'bx,3'bx,2'bx,3'bx,8'bx,5'bx,3'bx,2'bx,3'bx}; //for now any other operation will set all vars to x 
     endcase
 end
 endmodule
