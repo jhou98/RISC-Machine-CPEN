@@ -7,7 +7,7 @@ module cpu(clk,reset,in,out,N,V,Z,mem_cmd,mem_addr);
   output [15:0] out; //datapath_out
   output [1:0] mem_cmd;
   output [8:0] mem_addr;
-  output N, V, Z; //not sure about whether or not to wire these 
+  wire N, V, Z; //not sure about whether or not to wire these 
   wire load_ir; //load for instruction register 
 
 
@@ -25,10 +25,12 @@ module cpu(clk,reset,in,out,N,V,Z,mem_cmd,mem_addr);
   wire load_pc; 
   wire reset_pc; 
   wire load_addr;
-	wire PC_out;
-	wire PC_sel;
   wire [8:0] output_from_data_address;
-
+	
+  //Lab8 wires
+  wire [2:0] cond;
+  wire PC_out;		
+  wire PC_sel;		
   //top MUX output wire
   wire [8:0] next_pc;
 
@@ -47,7 +49,8 @@ module cpu(clk,reset,in,out,N,V,Z,mem_cmd,mem_addr);
 				.sximm8(sximm8),
 				.shift(shift),
 				.readnum(readnum),
-				.writenum(writenum)
+				.writenum(writenum),
+				.cond(cond)
   );
 
   FSM state_machine(    .clk(clk),
@@ -68,7 +71,11 @@ module cpu(clk,reset,in,out,N,V,Z,mem_cmd,mem_addr);
 		        .addr_sel(addr_sel),
 		        .mem_cmd(mem_cmd),
 		        .load_ir(load_ir),
-		        .load_addr(load_addr)
+		        .load_addr(load_addr),
+			.cond(cond)
+			.N(N),
+			.V(V),
+			.Z(Z)
   );
 
   datapath DP(          .clk(clk),
@@ -97,12 +104,13 @@ module cpu(clk,reset,in,out,N,V,Z,mem_cmd,mem_addr);
   // for MUX above program counter
   assign next_pc = reset_pc ? 9'b0 : (PC+1'b1);
 	
-	vDFFE #(9) Data_address(clk,load_addr,out[8:0], output_from_data_address);
+  vDFFE #(9) Data_address(clk,load_addr,out[8:0], output_from_data_address);
  
   //Lower MUX
   assign mem_addr = addr_sel ? PC : output_from_data_address;
-	//MUX for PC = PC +1+sx(imm8)
-	assign PC = PC_sel ? out[8:0] : PC_out;
+
+  //MUX for PC = PC +1+sx(imm8)		
+  assign PC = PC_sel ? out[8:0] : PC_out;
 
   //Now assign N,V,Z the values from status we get from datapath 
   assign N = status[0];
@@ -120,11 +128,12 @@ module instruct_decoder( instruction_out,
 			 sximm8, 
 			 shift,
 			 readnum,
-			 writenum );
+			 writenum,
+			 cond);
 
   input [15:0] instruction_out;
   input [2:0] nsel;
-  output [2:0] opcode;
+  output [2:0] opcode,cond;
   output reg [2:0] readnum, writenum;
   output [1:0] shift, ALUop, op;
   output [15:0] sximm5, sximm8;
@@ -132,7 +141,7 @@ module instruct_decoder( instruction_out,
   wire [4:0] imm5;
   wire [7:0] imm8;
 
-  setval retval(instruction_out,opcode,op,ALUop,imm5,imm8,shift,Rn,Rd,Rm);
+  setval retval(instruction_out,opcode,op,cond,ALUop,imm5,imm8,shift,Rn,Rd,Rm);
   //signed extended imm5 and imm8
   assign sximm5 = imm5[4] ? {11'b11111111111,imm5}:{11'b00000000000,imm5}; 
   assign sximm8 = imm8[7] ? {8'b11111111,imm8}:{8'b00000000,imm8};
@@ -145,9 +154,9 @@ module instruct_decoder( instruction_out,
     endcase
 endmodule
 
-module setval(instruction_out,opcode,op,ALUop,imm5,imm8,shift,Rn,Rd,Rm);
+module setval(instruction_out,opcode,op,cond,ALUop,imm5,imm8,shift,Rn,Rd,Rm);
   input [15:0] instruction_out;
-  output reg [2:0] opcode,Rn,Rd,Rm;
+  output reg [2:0] opcode,cond,Rn,Rd,Rm;
   output reg [1:0] op, ALUop, shift;
   output reg [4:0] imm5;
   output reg [7:0] imm8;
@@ -173,6 +182,8 @@ module setval(instruction_out,opcode,op,ALUop,imm5,imm8,shift,Rn,Rd,Rm);
 						8'b0,instruction_out[4:0],instruction_out[7:5],2'b0,3'b0}; //STR (Rn + sx(im5) = Rd)
 	{3'b111,13'bx}: {opcode,op,ALUop,Rn,imm8,imm5,Rd,shift,Rm} = {instruction_out[15:13],2'b0,2'b0,3'b0,
 						8'b0,5'b0,3'b0,2'b0,3'b0}; //HALT (so everything is 0 other than opcode = 111
+	{5'b00100,11'bx}:{opcode,op,cond,ALUop,Rn,imm8,imm5,Rd,shift,Rm} = {instruction_out[15:13],instruction_out[12:11],instruction_out[10:8],
+						2'b0,3'b0,instruction_out[7:0],5'b0,3'b0,2'b0,3'b0}; //Branch instructions (B,BEQ,BNE,BLT,BLE)	
 	default: {opcode,op,ALUop,Rn,imm8,imm5,Rd,shift,Rm} = {3'bx,2'bx,2'bx,3'bx,8'bx,5'bx,3'bx,2'bx,3'bx}; //for now any other operation will set all vars to x 
     endcase
 end
