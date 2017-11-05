@@ -25,6 +25,8 @@ module cpu(clk,reset,in,out,N,V,Z,mem_cmd,mem_addr);
   wire load_pc; 
   wire reset_pc; 
   wire load_addr;
+	wire PC_out;
+	wire PC_sel;
   wire [8:0] output_from_data_address;
 
   //top MUX output wire
@@ -99,6 +101,8 @@ module cpu(clk,reset,in,out,N,V,Z,mem_cmd,mem_addr);
  
   //Lower MUX
   assign mem_addr = addr_sel ? PC : output_from_data_address;
+	//MUX for PC = PC +1+sx(imm8)
+	assign PC = PC_sel ? out[8:0] : PC_out;
 
   //Now assign N,V,Z the values from status we get from datapath 
   assign N = status[0];
