@@ -39,7 +39,7 @@ casex({reset, opcode,op,cond,state})
 {9'b000100001, `S0}: if(Z ==1'b1) {nsel, next_state,loada,loadb,muxccontrol,loadc,vsel,write,loads,asel,bsel,reset_pc,load_pc,addr_sel,load_ir,mem_cmd,load_addr}
                    ={3'b0,     `S1   ,1'b1 ,1'b0 ,1'b1       ,1'b0 ,2'b10,1'b0,1'b0 ,1'b0,1'b0,1'b0    ,1'b0   ,1'b0    ,1'b0   ,`M_NONE,1'b0}; //BEQ
                    else next_state = `S4; //add other stuff here 
-{9'b0001000010, `S0}: if(Z ==1'b0) {nsel, next_state,loada,loadb,muxccontrol,loadc,vsel,write,loads,asel,bsel,reset_pc,load_pc,addr_sel,load_ir,mem_cmd,load_addr}
+{9'b000100010, `S0}: if(Z ==1'b0) {nsel, next_state,loada,loadb,muxccontrol,loadc,vsel,write,loads,asel,bsel,reset_pc,load_pc,addr_sel,load_ir,mem_cmd,load_addr}
                    ={3'b0,     `S1   ,1'b1 ,1'b0 ,1'b1       ,1'b0 ,2'b10,1'b0,1'b0 ,1'b0,1'b0,1'b0    ,1'b0   ,1'b0    ,1'b0   ,`M_NONE,1'b0}; //BNE
                    else next_state = `S4; //add other stuff here 
 endcase
