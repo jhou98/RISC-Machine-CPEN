@@ -1,0 +1,22 @@
+/* always @(*) 
+    case(nsel)
+      3'b001: {readnum,writenum} = {Rn,Rn}; //set the register to Rn if nsel = 0
+      3'b010: {readnum,writenum} = {Rd,Rd}; //set register to Rd if nsel = 1
+      3'b100: {readnum,writenum} = {Rm,Rm}; //set register to Rm if nsel = 2
+      default: {readnum,writenum} = 6'bx; //set the registers to x 
+      
+        output reg load_ir; //Lab 7 
+  output reg [2:0] nsel;
+  output reg loada,loadb,loadc,loads,write,asel,bsel;
+  output reg load_pc,reset_pc,addr_sel,load_addr; //Lab7 addition going to program counter
+  output reg [1:0] vsel;
+  output reg [1:0] mem_cmd; //Lab 7 addition going into RAM 
+ */ //this is just for my reference
+
+always @(posedge clk) begin
+casex({reset, opcode,op,cond,state})
+//B -> PC = PC+1+sx(im8)
+{9'b000100000,`S0}: {nsel, next_state,loada,loadb,loadc,vsel,write,loads,asel,bsel,reset_pc,load_pc,addr_sel,load_ir,mem_cmd,load_addr}
+={3'b0,`S1,}
+endcase
+end
