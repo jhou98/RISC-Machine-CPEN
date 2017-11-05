@@ -28,7 +28,8 @@ module lab8_top(KEY,SW,LEDR,HEX0,HEX1,HEX2,HEX3,HEX4,HEX5,CLOCK_50);
 	   .V(V),
 	   .Z(Z),
 	   .mem_cmd(mem_cmd),
-	   .mem_addr(mem_addr)
+	   .mem_addr(mem_addr),
+	   .halt(LEDR[8])
   ); //CPU module 
   
   RAM #(16,8,"lab8fig2.txt") MEM( .clk(CLOCK_50),

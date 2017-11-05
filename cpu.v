@@ -1,4 +1,4 @@
-module cpu(clk,reset,in,out,N,V,Z,mem_cmd,mem_addr);
+module cpu(clk,reset,in,out,N,V,Z,mem_cmd,mem_addr,halt);
 
   input clk, reset;
 
@@ -32,6 +32,7 @@ module cpu(clk,reset,in,out,N,V,Z,mem_cmd,mem_addr);
   wire [8:0] PC_out;		
   wire PC_sel;		
   wire muxccontrol;
+  output halt;
   //top MUX output wire
   wire [8:0] next_pc;
 
@@ -78,7 +79,8 @@ module cpu(clk,reset,in,out,N,V,Z,mem_cmd,mem_addr);
 			.V(V),
 			.Z(Z),
 			.PC_sel(PC_sel),
-			.muxccontrol(muxccontrol)
+			.muxccontrol(muxccontrol),
+			.halt(halt)
   );
 
   datapath DP(          .clk(clk),
@@ -99,7 +101,7 @@ module cpu(clk,reset,in,out,N,V,Z,mem_cmd,mem_addr);
 			.C(out),
 			.sximm8(sximm8),
 			.sximm5(sximm5),
-			.PC(PC),
+			.PC(PC_out),
 			.muxccontrol(muxccontrol)
   );	
 
@@ -108,7 +110,7 @@ module cpu(clk,reset,in,out,N,V,Z,mem_cmd,mem_addr);
   // for MUX above program counter
   assign next_pc = reset_pc ? 9'b0:(PC+1'b1);
 	
-  vDFFE #(9) Data_address(clk,load_addr,out[8:0], output_from_data_address);
+  vDFFE #(9) Data_address(clk,load_addr,out[8:0],output_from_data_address);
  
   //Lower MUX
   assign mem_addr = addr_sel ? PC:output_from_data_address;
