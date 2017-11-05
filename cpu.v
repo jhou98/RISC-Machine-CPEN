@@ -7,7 +7,7 @@ module cpu(clk,reset,in,out,N,V,Z,mem_cmd,mem_addr);
   output [15:0] out; //datapath_out
   output [1:0] mem_cmd;
   output [8:0] mem_addr;
-  wire N, V, Z; //not sure about whether or not to wire these 
+  wire N, V, Z; 
   wire load_ir; //load for instruction register 
 
 
@@ -31,6 +31,7 @@ module cpu(clk,reset,in,out,N,V,Z,mem_cmd,mem_addr);
   wire [2:0] cond;
   wire PC_out;		
   wire PC_sel;		
+  wire muxccontrol;
   //top MUX output wire
   wire [8:0] next_pc;
 
@@ -75,7 +76,9 @@ module cpu(clk,reset,in,out,N,V,Z,mem_cmd,mem_addr);
 			.cond(cond)
 			.N(N),
 			.V(V),
-			.Z(Z)
+			.Z(Z),
+			.PC_sel(PC_sel),
+			.muxccontrol(muxccontrol)
   );
 
   datapath DP(          .clk(clk),

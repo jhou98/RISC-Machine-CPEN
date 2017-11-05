@@ -1,5 +1,5 @@
 module FSM(clk, reset, opcode, op, cond, nsel,loada,loadb,loadc,vsel,write,loads,asel,bsel,reset_pc,load_pc,addr_sel,
-		mem_cmd,load_ir,load_addr,muxccontrol,N,V,Z);
+		mem_cmd,load_ir,load_addr,muxccontrol,N,V,Z,PC_sel);
   input clk, reset; 
   input [2:0] opcode;
   input [1:0] op;
@@ -11,7 +11,7 @@ module FSM(clk, reset, opcode, op, cond, nsel,loada,loadb,loadc,vsel,write,loads
   output reg load_pc,reset_pc,addr_sel,load_addr; //Lab7 addition going to program counter
   output reg [1:0] vsel;
   output reg [1:0] mem_cmd; //Lab 7 addition going into RAM 
-  output reg muxccontrol; //Lab8 addition 
+  output reg muxccontrol,PC_sel; //Lab8 addition 
   wire [3:0] state;
   reg [3:0] next_state;
   
