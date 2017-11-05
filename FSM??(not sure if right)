@@ -24,23 +24,33 @@
 always @(posedge clk) begin
 casex({reset, opcode,op,cond,state})
 //B -> PC = PC+1+sx(im8)
-{9'b000100000,`S0}: {nsel, next_state,loada,loadb,muxccontrol,loadc,vsel,write,loads,asel,bsel,reset_pc,load_pc,addr_sel,load_ir,mem_cmd,load_addr}
-                   ={3'b0,     `S1   ,1'b1 ,1'b0 ,1'b1       ,1'b0 ,2'b10,1'b0,1'b0 ,1'b0,1'b0,1'b0    ,1'b0   ,1'b0    ,1'b0   ,`M_NONE,1'b0};
+{9'b000100000,`S0}: {nsel, next_state,loada,loadb,muxccontrol,loadc,vsel,write,loads,asel,bsel,reset_pc,load_pc,addr_sel,load_ir,mem_cmd,load_addr, PC_sel}
+                   ={3'b0,     `S1   ,1'b1 ,1'b0 ,1'b1       ,1'b0 ,2'b10,1'b0,1'b0 ,1'b0,1'b0,1'b0    ,1'b0   ,1'b0    ,1'b0   ,`M_NONE,1'b0,1'b0};
 //set muxccontrol to 1 to pick data_in, set vsel 2'b10 to choose sximm8, load in to a
-{9'b000100xxx,`S1}: {nsel, next_state,loada,loadb,muxccontrol,loadc,vsel,write,loads,asel,bsel,reset_pc,load_pc,addr_sel,load_ir,mem_cmd,load_addr}
-                   ={3'b0,     `S2   ,1'b0 ,1'b1 ,1'b1       ,1'b0 ,2'b01,1'b0,1'b0 ,1'b0,1'b0,1'b0    ,1'b0   ,1'b0    ,1'b0   ,`M_NONE,1'b0};
+{9'b000100xxx,`S1}: {nsel, next_state,loada,loadb,muxccontrol,loadc,vsel,write,loads,asel,bsel,reset_pc,load_pc,addr_sel,load_ir,mem_cmd,load_addr, PC_sel}
+                   ={3'b0,     `S2   ,1'b0 ,1'b1 ,1'b1       ,1'b0 ,2'b01,1'b0,1'b0 ,1'b0,1'b0,1'b0    ,1'b0   ,1'b0    ,1'b0   ,`M_NONE,1'b0,1'b0};
 //set muxccontrol to 1 to pick data_in, set vsel 2'b01 to choose PC, load in to b
-{9'b000100xxx,`S2}: {nsel, next_state,loada,loadb,muxccontrol,loadc,vsel,write,loads,asel,bsel,reset_pc,load_pc,addr_sel,load_ir,mem_cmd,load_addr}
-                   ={3'b0,     `S3   ,1'b0 ,1'b0 ,1'b0       ,1'b1 ,2'b00,1'b0,1'b0 ,1'b0,1'b0,1'b0    ,1'b0   ,1'b0    ,1'b0   ,`M_NONE,1'b0};
+{9'b000100xxx,`S2}: {nsel, next_state,loada,loadb,muxccontrol,loadc,vsel,write,loads,asel,bsel,reset_pc,load_pc,addr_sel,load_ir,mem_cmd,load_addr, PC_sel}
+                   ={3'b0,     `S3   ,1'b0 ,1'b0 ,1'b0       ,1'b1 ,2'b00,1'b0,1'b0 ,1'b0,1'b0,1'b0    ,1'b0   ,1'b0    ,1'b0   ,`M_NONE,1'b0,1'b0};
 //add the two and send to datapath_out
-{9'b000100xxx,`S3}: {nsel, next_state,loada,loadb,muxccontrol,loadc,vsel,write,loads,asel,bsel,reset_pc,load_pc,addr_sel,load_ir,mem_cmd,load_addr}
-                   ={3'b0,     `S4   ,1'b0 ,1'b0 ,1'b0       ,1'b1 ,2'b00,1'b0,1'b0 ,1'b0,1'b0,1'b0    ,1'b0   ,1'b0    ,1'b0   ,`M_READ,1'b1};
-                   //fix last part
+{9'b000100xxx,`S3}: {nsel, next_state,loada,loadb,muxccontrol,loadc,vsel,write,loads,asel,bsel,reset_pc,load_pc,addr_sel,load_ir,mem_cmd,load_addr, PC_sel}
+                   ={3'b0,     `IF1   ,1'b0 ,1'b0 ,1'b0       ,1'b1 ,2'b00,1'b0,1'b0 ,1'b0,1'b0,1'b0    ,1'b0   ,1'b1    ,1'b0   ,`M_NONE,1'b0,1'b1};
+//change value of PC to PC+1+sx(im8)
+{9'bxxxxxxxxx,`IF1}: {nsel, next_state,loada,loadb,muxccontrol,loadc,vsel,write,loads,asel,bsel,reset_pc,load_pc,addr_sel,load_ir,mem_cmd,load_addr, PC_sel}
+                   ={3'b0,     `IF2   ,1'b0 ,1'b0 ,1'b0       ,1'b1 ,2'b00,1'b0,1'b0 ,1'b0,1'b0,1'b0    ,1'b0   ,1'b1    ,1'b0   ,`M_NONE,1'b0,1'b0};
+//PC = PC+1
 {9'b000100001, `S0}: if(Z ==1'b1) {nsel, next_state,loada,loadb,muxccontrol,loadc,vsel,write,loads,asel,bsel,reset_pc,load_pc,addr_sel,load_ir,mem_cmd,load_addr}
                    ={3'b0,     `S1   ,1'b1 ,1'b0 ,1'b1       ,1'b0 ,2'b10,1'b0,1'b0 ,1'b0,1'b0,1'b0    ,1'b0   ,1'b0    ,1'b0   ,`M_NONE,1'b0}; //BEQ
-                   else next_state = `S4; //add other stuff here 
+                   else next_state = `IF1; 
 {9'b000100010, `S0}: if(Z ==1'b0) {nsel, next_state,loada,loadb,muxccontrol,loadc,vsel,write,loads,asel,bsel,reset_pc,load_pc,addr_sel,load_ir,mem_cmd,load_addr}
                    ={3'b0,     `S1   ,1'b1 ,1'b0 ,1'b1       ,1'b0 ,2'b10,1'b0,1'b0 ,1'b0,1'b0,1'b0    ,1'b0   ,1'b0    ,1'b0   ,`M_NONE,1'b0}; //BNE
-                   else next_state = `S4; //add other stuff here 
+                   else next_state = `IF1;
+{9'b000100010, `S0}: if(N != V) {nsel, next_state,loada,loadb,muxccontrol,loadc,vsel,write,loads,asel,bsel,reset_pc,load_pc,addr_sel,load_ir,mem_cmd,load_addr}
+                   ={3'b0,     `S1   ,1'b1 ,1'b0 ,1'b1       ,1'b0 ,2'b10,1'b0,1'b0 ,1'b0,1'b0,1'b0    ,1'b0   ,1'b0    ,1'b0   ,`M_NONE,1'b0}; //BLT
+                   else next_state = `IF1; 
+{9'b000100010, `S0}: if(N != V || Z == 1'b1) {nsel, next_state,loada,loadb,muxccontrol,loadc,vsel,write,loads,asel,bsel,reset_pc,load_pc,addr_sel,load_ir,mem_cmd,load_addr}
+                   ={3'b0,     `S1   ,1'b1 ,1'b0 ,1'b1       ,1'b0 ,2'b10,1'b0,1'b0 ,1'b0,1'b0,1'b0    ,1'b0   ,1'b0    ,1'b0   ,`M_NONE,1'b0}; //BLE
+                   else next_state = `IF1; 
+
 endcase
 end
