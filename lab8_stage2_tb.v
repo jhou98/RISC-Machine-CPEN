@@ -6,7 +6,7 @@ module lab8_stage2_tb;
   reg err;
   reg CLOCK_50;
 
-  lab8_top DUT(KEY,SW,LEDR,HEX0,HEX1,HEX2,HEX3,HEX4,HEX5,CLOCK_50);
+  lab8_stage2_top DUT(KEY,SW,LEDR,HEX0,HEX1,HEX2,HEX3,HEX4,HEX5,CLOCK_50);
 
   initial forever begin
     CLOCK_50 = 0; #5;
@@ -18,12 +18,12 @@ module lab8_stage2_tb;
     KEY[1] = 1'b0; // reset asserted
     #10; // wait until next falling edge of clock
     KEY[1] = 1'b1; // reset de-asserted, PC still undefined if as in Figure 4
-    while (~break) begin
-      @(posedge (DUT.CPU.FSM.p == 20'h10000) or posedge break);  // wait until IF1 
+    while (~LEDR[8]) begin
+      @(posedge (DUT.CPU.FSM.state == 4'b0101) or posedge break);  // wait until IF1 
       @(negedge CLOCK_50); // show advance to negative edge of clock
       $display("PC = %h", DUT.CPU.PC); 
     end
-    if (DUT.MEM.mem[25] !== -16'd23) begin err = 1; $display("FAILED: mem[25] wrong"); $stop; end
+    if (DUT.MEM.mem[25] !== -16'd23) begin err = 1; $display("FAILED: mem[25] wrong, should be %b, but is %b",-16'd23,DUT.MEM.mem[25]); $stop; end
     if (~err) $display("PASSED");
     $stop;
   end

@@ -55,7 +55,7 @@ module cpu(clk,reset,in,out,N,V,Z,mem_cmd,mem_addr,halt);
 				.cond(cond)
   );
 
-  FSM state_machine(    .clk(clk),
+  FSM FSM(    .clk(clk),
 			.reset(reset),
 			.opcode(opcode),
 			.op(op),
@@ -190,6 +190,8 @@ module setval(instruction_out,opcode,op,cond,ALUop,imm5,imm8,shift,Rn,Rd,Rm);
 						8'b0,5'b0,3'b0,2'b0,3'b0}; //HALT (so everything is 0 other than opcode = 111
 	{5'b00100,11'bx}:{opcode,op,cond,ALUop,Rn,imm8,imm5,Rd,shift,Rm} = {instruction_out[15:13],instruction_out[12:11],instruction_out[10:8],
 						2'b0,3'b0,instruction_out[7:0],5'b0,3'b0,2'b0,3'b0}; //Branch instructions (B,BEQ,BNE,BLT,BLE)	
+	{3'b010,13'bx}:{opcode,op,ALUop,Rn,imm8,imm5,Rd,shift,Rm} = {instruction_out[15:13],instruction_out[12:11],2'b0,
+						instruction_out[10:8],instruction_out[7:0],5'b0,instruction_out[7:5],2'b0,3'b0}; //Branch and Link instructions(BL,BLX,BX)
 	default: {opcode,op,cond,ALUop,Rn,imm8,imm5,Rd,shift,Rm} = {3'bx,2'bx,3'bx,2'bx,3'bx,8'bx,5'bx,3'bx,2'bx,3'bx}; //for now any other operation will set all vars to x 
     endcase
 end
