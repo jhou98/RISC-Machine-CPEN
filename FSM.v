@@ -54,7 +54,7 @@ module FSM(clk, reset, opcode, op, cond, nsel,loada,loadb,loadc,vsel,write,loads
 	{6'b011010,3'bx,`S1}: {nsel, next_state,loada,loadb,loadc,vsel,write,loads,asel,bsel} 
 				= {3'b000,`IF1,1'b0,1'b0,1'b0,2'b00,1'b0,1'b0,1'b0,1'b0}; //now we are done writing so we go back to IF1 state 
         {6'b011000,3'bx,`S0}: {nsel, next_state,loada,loadb,loadc,vsel,write,loads,asel,bsel,load_pc,load_ir,PC_sel} 
-				= {3'b100,`S1,1'b0,1'b1,1'b0,2'b10,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0}; //this is for Mov Rm value into Rd with shift, so start by placing Rm into b
+				= {3'b100,`S1,1'b0,1'b1,1'b0,2'b00,1'b0,1'b0,1'b0,1'b1,1'b0,1'b0,1'b0}; //this is for Mov Rm value into Rd with shift, so start by placing Rm into b
 	{6'b011000,3'bx,`S1}: {nsel,next_state,loada,loadb,loadc,vsel,write,loads,asel,bsel}
 				= {3'b000,`S2,1'b0,1'b0,1'b1,2'b00,1'b0,1'b0,1'b1,1'b0}; //now we store the value into C
 	{6'b011000,3'bx,`S2}: {nsel,next_state,loada,loadb,loadc,vsel,write,loads,asel,bsel}
@@ -152,21 +152,21 @@ module FSM(clk, reset, opcode, op, cond, nsel,loada,loadb,loadc,vsel,write,loads
                   		={3'b0,`S1,1'b1,1'b0,1'b1,1'b0,2'b10,1'b0,1'b0,1'b0,1'b0,1'b0,`M_NONE,1'b0,1'b0,1'b0}; //BLE
                   	    else {next_state,load_pc} = {`IF1,1'b0};  //PC = PC+1
 	{6'b001011,3'bx,`S0}: {nsel,next_state,loada,loadb,muxccontrol,loadc,vsel,write,loads,asel,bsel,load_ir,mem_cmd,load_addr,PC_sel,load_pc}
-				={3'b001,`S1,1'b0,1'b0,1'b0,1'b0,2'b01,1'b1,1'b0,1'b0,1'b0,1'b0,`M_NONE,1'b0,1'b0,1'b0}; //BL, load R7 = PC 
+				={3'b001,`S1,1'b0,1'b0,1'b0,1'b0,2'b01,1'b1,1'b0,1'b0,1'b0,1'b0,`M_NONE,1'b0,1'b0,1'b0}; //BL, load R7 = PC + 1 
 	{6'b001011,3'bx,`S1}:{nsel, next_state,loada,loadb,muxccontrol,loadc,vsel,write,loads,asel,bsel,load_addr,PC_sel}
-                  		={3'b0,`S2,1'b0,1'b1,1'b1,1'b0,2'b01,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0}; //load PC into Reg B
+                  		={3'b0,`S2,1'b0,1'b1,1'b1,1'b0,2'b01,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0}; //load PC+1 into Reg B
 	{6'b001011,3'bx,`S2}:{nsel, next_state,loada,loadb,muxccontrol,loadc,vsel,write,loads,asel,bsel,load_addr,PC_sel}
                   		={3'b0,`S3,1'b1,1'b0,1'b1,1'b0,2'b10,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0};//load sximm8 into Reg A
 	{6'b001011,3'bx,`S3}:{nsel, next_state,loada,loadb,muxccontrol,loadc,vsel,write,loads,asel,bsel,load_addr, PC_sel}
-                   		={3'b0,`S4,1'b0,1'b0,1'b0,1'b1,2'b00,1'b0,1'b0,1'b0,1'b0,1'b0,1'b1};//add PC + sximm8 and load into datapath_out
+                   		={3'b0,`S4,1'b0,1'b0,1'b0,1'b1,2'b00,1'b0,1'b0,1'b0,1'b0,1'b0,1'b1};//add PC+1+sximm8 and load into datapath_out
 	{6'b001011,3'bx,`S4}:{nsel, next_state,loada,loadb,muxccontrol,loadc,vsel,write,loads,asel,bsel,load_addr,PC_sel}
                    		={3'b0,`BIF1,1'b0,1'b0,1'b0,1'b0,2'b00,1'b0,1'b0,1'b0,1'b0,1'b0,1'b1};  //now go to the Branch IF1 (BIF1) and continue from there
 	{6'b001000,3'bx,`S0}:{nsel,next_state,loada,loadb,muxccontrol,loadc,vsel,write,loads,asel,bsel,load_ir,mem_cmd,load_addr,PC_sel,load_pc}
 				={3'b010,`S1,1'b0,1'b1,1'b0,1'b0,2'b00,1'b0,1'b0,1'b1,1'b0,1'b0,`M_NONE,1'b0,1'b0,1'b0}; //BX Rd,load Rd into regb
 	{6'b001000,3'bx,`S1}:{next_state,loadb,loadc,PC_sel} = {`S2,1'b0,1'b1,1'b1}; //Load value of Rd into datapath_out
-	{6'b001000,3'bx,`S2}:{next_state,loadc} = {`BIF1,1'b0}; //PC = Rd
+	{6'b001000,3'bx,`S2}:{next_state,loadc,asel} = {`BIF1,1'b0,1'b0}; //PC = Rd
 	{6'b001010,3'bx,`S0}:{nsel,next_state,loada,loadb,muxccontrol,loadc,vsel,write,loads,asel,bsel,load_ir,mem_cmd,load_addr,PC_sel,load_pc}
-				={3'b001,`S1,1'b0,1'b0,1'b0,1'b0,2'b01,1'b1,1'b0,1'b0,1'b0,1'b0,`M_NONE,1'b0,1'b0,1'b0}; //BLX, load R7 = PC 
+				={3'b001,`S1,1'b0,1'b0,1'b0,1'b0,2'b01,1'b1,1'b0,1'b0,1'b0,1'b0,`M_NONE,1'b0,1'b0,1'b0}; //BLX, load R7 = PC + 1
 	{6'b001010,3'bx,`S1}:{nsel,next_state,loada,loadb,muxccontrol,loadc,vsel,write,loads,asel,bsel,load_addr,PC_sel}
 				={3'b010,`S2,1'b0,1'b1,1'b0,1'b0,2'b00,1'b0,1'b0,1'b1,1'b0,1'b0,1'b0}; //Load Rd into Reg B 
 	{6'b001010,3'bx,`S2}:{nsel,next_state,loada,loadb,muxccontrol,loadc,vsel,write,loads,asel,bsel,load_addr,PC_sel}

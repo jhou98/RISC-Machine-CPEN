@@ -172,7 +172,7 @@ module setval(instruction_out,opcode,op,cond,ALUop,imm5,imm8,shift,Rn,Rd,Rm);
 	//set all outputs that are not used to 0
 	{5'b11010,11'bx}: {opcode,op,ALUop,Rn,imm8,imm5,Rd,shift,Rm} = {instruction_out[15:13],2'b10,2'b0,instruction_out[10:8],instruction_out[7:0],
 						5'b0,3'b0,2'b0,3'b0};//Move value to register (MOV Rn, #<im8>)
-	{8'b11000000,8'bx}: {opcode,op,ALUop,Rn,imm8,imm5,Rd,shift,Rm,cond} = {instruction_out[15:13],2'b0,2'b0,3'b0,8'b0,5'b0, instruction_out[7:5],
+	{8'b11000000,8'bx}: {opcode,op,ALUop,Rn,imm8,imm5,Rd,shift,Rm} = {instruction_out[15:13],2'b0,2'b0,3'b0,8'b0,5'b0, instruction_out[7:5],
 						instruction_out[4:3],instruction_out[2:0]};//Shift a known value and store in a new register (Rn =sh_Rm)
 	{5'b10100,11'bx}: {opcode,op,ALUop,Rn,imm8,imm5,Rd,shift,Rm} = {instruction_out[15:13],2'b0,2'b0,instruction_out[10:8],
 						8'b0,5'b0,instruction_out[7:5],instruction_out[4:3],instruction_out[2:0]};//Add (ADD Rd = Rn + Rm)
